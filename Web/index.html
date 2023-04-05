@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Image Processor</title>
+    <style>
+            img{
+                max-width: 50vw;
+            }
+    </style>
+</head>
+<body>
+	<h1 style="text-align: center;">Process Image</h1>
+	<form style="text-align: center;">
+        <label for="name">Name: </label>
+        <input type="text" id="name" value="John"><br>
+        <label for="surname">Surname: </label>
+        <input type="text" id="surname" value="Doe"><br>
+        <label for="numbers">Numbers: </label>
+        <input type="text" id="numbers" value="12 50 46"><br>
+		<label for="imageUpload">Upload an image: </label>
+		<input type="file" id="imageUpload" name="imageUpload" accept="image/*">
+	</form>
+
+	<div id="output" style="display: flex; text-align: center;">
+        <div style="flex: 1;" id="real"></div>
+        <div style="flex: 1;" id="process"></div>
+    </div>
+
+	<script>
+		const imageUpload = document.getElementById("imageUpload");
+		imageUpload.addEventListener("change", handleImageUpload);
+        
+		function handleImageUpload() {
+			const file = imageUpload.files[0];
+            const reader = new FileReader();
+
+            let base64Image;
+            reader.readAsDataURL(file);
+            reader.onload = () => {
+                console.log(reader.result);
+                base64Image = reader.result;
+                const img = new Image();
+                img.src = base64Image;
+                const rdiv = document.getElementById("real");
+                rdiv.innerHTML = "";
+                rdiv.appendChild(img);
+                processImage(base64Image);
+            };     
+		}
+
+
+		function processImage(imageData) {
+            const name = document.getElementById("name");
+            const surname = document.getElementById("surname");
+            const numbers = document.getElementById("numbers");
+            let numarr = []
+            numarr = numbers.value.split(" ")
+            numarr = numarr.map((val)=>parseInt(val))
+            console.log(numarr)
+			fetch("http://54.235.7.11:8082/process-image", {
+				method: "POST",
+				body: JSON.stringify({ name:name.value?name.value:"Default",surname:surname.value?surname.value:"Default",numbers:numarr,image: imageData }),
+				headers: {
+					"Content-Type": "application/json"
+				}
+			})
+			.then(response => response.json())
+			.then(data => {
+				const pdiv = document.getElementById("process");
+				const processedImg = new Image();
+				processedImg.src = data.processed_image;
+                pdiv.innerHTML = "";
+				pdiv.appendChild(processedImg);
+			})
+			.catch(error => console.error(error));
+		}
+	</script> 
+</body>
+</html>
